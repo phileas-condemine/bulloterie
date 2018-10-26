@@ -8,18 +8,36 @@ server <- function(input, output) {
   
   output$force <- renderForceNetwork({
     focus_competences=input$competences
-    if(is.null(focus_competences))
+    # focus_competences=nm_competences[1:5]
+    noms_=input$personnes
+    # noms_="Antoine"
+    interest=input$interet
+    # interest="interet"
+    if(length(noms_)>0){
+      autres_competences=bullo%>%
+        filter(nom%in%noms_)%>%
+        .[,grep(pattern = interest,names(.))]%>%
+        sapply(sum)%>%.[.>0]%>%
+        names%>%
+        gsub(pattern = "(\\.interet)|(\\.connait)|(\\.expert)",
+             replacement = "")
+
+    focus_competences=c(focus_competences,autres_competences)%>%
+      unique
+
+    }
+    if (length(focus_competences)==0|is.null(focus_competences))
       return(NULL)
     filter_col=c(1,2,unname(unlist(sapply(focus_competences,function(x)grep(x,names(bullo))))))
-    bullo=bullo[-1,filter_col]
-    bullo=bullo%>%
-      apply(2,as.character)
-    not_empty_competence=apply(bullo,2,function(x)sum(!x==""))
+    bullo_current=bullo[,filter_col]
+    not_empty_competence=sapply(bullo_current[,3:ncol(bullo_current)],sum)
     not_empty_competence=names(not_empty_competence[not_empty_competence>0])
-    not_empty_competence=setdiff(not_empty_competence,c("symbole","nom"))
+    # not_empty_competence=setdiff(not_empty_competence,c("symbole","nom"))
+    if(length(not_empty_competence)==0)
+      return(NULL)
     build_graph=function(nm){
-      ind=which(bullo[,nm]=="1")
-      src=bullo[ind,"nom"]
+      ind=which(bullo_current[,nm]==1)# "1"
+      src=bullo_current[ind,][["nom"]]
       target=rep(nm,length(src))
       networkData <- data.frame(source=src, target,value=1)
       return(networkData)}
@@ -34,6 +52,7 @@ server <- function(input, output) {
     
     nodes=rbind(nodes_src,nodes_tgt)
     nodes$ID=1:nrow(nodes)-1
+    nodes[nodes$name%in%input$personnes,"size"] <- 100
     networkData=merge(networkData,nodes[,c("name","ID")],by.x="source",by.y="name")
     setnames(networkData,"ID","sourceID")
     networkData=merge(networkData,nodes[,c("name","ID")],by.x="target",by.y="name")
@@ -64,7 +83,7 @@ server <- function(input, output) {
                  legend=T,
                  opacityNoHover = 1,
                  opacity=.7,charge = -100,zoom = T)
-  
+
   })
   
 }
