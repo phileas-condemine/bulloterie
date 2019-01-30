@@ -3,23 +3,45 @@ library(networkD3)
 
 data(MisLinks)
 data(MisNodes)
-server <- function(input, output) {
+server <- function(input, output,session) {
   
-  
+  observeEvent(input$data_source,{
+    print(input$data_source)
+    if(input$data_source=="eig2018"){
+      source("prep_bullo_eig18.R")
+    }else if(input$data_source=="mentors2019") {
+      source("prep_bullo_mentor19.R")
+    } else if(input$data_source=="etalab") {
+      source("prep_bullo_etalab.R")
+    }
+    req(bullo);req(nm_competences);
+    updateSelectInput(session,inputId="competences", label = "Ajout de compétences", 
+                      choices = nm_competences,selected = sample(nm_competences,3))
+    updateSelectInput(session,inputId="personnes",label="Recherche par nom_AKA",
+                      choices=bullo$nom,selected=sample(bullo$nom,2))
+    updateSelectInput(session,inputId="interet",label="Rapport au domaine",
+                      choices=c(concepts,"tous"))
+    })
+
   output$force <- renderForceNetwork({
+  req(bullo);req(nm_competences);
     focus_competences=input$competences
-    # focus_competences=nm_competences[1:5]
+    # focus_competences=setdiff(nm_competences,"C++")
+    
     noms_=input$personnes
     # noms_="Antoine"
     interest=input$interet
     # interest="interet"
     if(length(noms_)>0){
       autres_competences=bullo%>%
-        filter(nom%in%noms_)%>%
-        .[,grep(pattern = interest,names(.))]%>%
+        filter(nom%in%noms_)%>%{
+          if(interest=="tous"){
+            .[,grep(pattern = paste0(concepts,collapse="|"),names(.))] } else
+        .[,grep(pattern = interest,names(.))]
+          }%>%
         sapply(sum)%>%.[.>0]%>%
         names%>%
-        gsub(pattern = "(\\.interet)|(\\.connait)|(\\.expert)",
+        gsub(pattern = paste0("\\.",concepts,collapse="|"),
              replacement = "")
 
     focus_competences=c(focus_competences,autres_competences)%>%
@@ -29,6 +51,7 @@ server <- function(input, output) {
     if (length(focus_competences)==0|is.null(focus_competences))
       return(NULL)
     filter_col=c(1,2,unname(unlist(sapply(focus_competences,function(x)grep(x,names(bullo))))))
+    filter_col=names(bullo)[filter_col]
     bullo_current=bullo[,filter_col]
     not_empty_competence=sapply(bullo_current[,3:ncol(bullo_current)],sum)
     not_empty_competence=names(not_empty_competence[not_empty_competence>0])
@@ -82,9 +105,8 @@ server <- function(input, output) {
                  colourScale = JS("d3.scaleOrdinal(d3.schemeCategory10);"),
                  legend=T,
                  opacityNoHover = 1,
-                 opacity=.7,charge = -100,zoom = T)
+                 opacity=.7,charge = -150,zoom = T)
 
   })
-  
 }
 
