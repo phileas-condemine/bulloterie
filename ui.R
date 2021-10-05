@@ -1,13 +1,14 @@
 ui <- shinyUI(fluidPage(
-  
-  titlePanel("Bulloterie"),
+  titlePanel("Bulloterie"
+             # ,tags$script(src="http://d3js.org/d3.v3.min.js", charset="utf-8")
+             ),
   
   sidebarLayout(
     sidebarPanel(
-      selectInput(inputId="data_source",label="Source de données",choices=c("mentors2019","etalab","eig2018")),
+      selectInput(inputId="data_source",label="Source de données",choices=c("eig2019","mentors2019","etalab","eig2018")),
       selectInput(inputId="competences", label = "Ajout de compétences",multiple = T,choices=""),
       div(id="personne_interet",style="border:1px solid #d3d3d3;background-color:#e5e5e5;",
-          selectInput(inputId="personnes",label="Recherche par nom_AKA",
+          selectInput(inputId="personnes",label="Recherche par nom",
                       multiple = T,choices=""),
           selectInput(inputId="interet",label="Rapport au domaine",choices="")
       ),
@@ -23,7 +24,8 @@ ui <- shinyUI(fluidPage(
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("Force Network", forceNetworkOutput("force",height = 1000))
+        tabPanel("Force Network", 
+                 forceNetworkOutput(outputId = "force",height = 1000))
       )
     )
   )

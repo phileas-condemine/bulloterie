@@ -17,3 +17,5 @@ Cette application propose d'explorer les relations entre participants de la bull
 # Amélioration
 
 Cf issues
+
+<img src="photo_bulloterie_eig2018.jpg"/>

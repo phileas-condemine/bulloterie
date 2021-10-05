@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.httr-oauth
+*.csv
+*.RData
+*.xlsx
+*.txt
+*.json
+ttt.rds
+rsconnect/
